@@ -19,7 +19,7 @@ Vincoli:
 - Documentazione per scopi didattici
 
 **Non-Goals:**
-- Categorie gerarchiche (sara evoluzione futura con OpenSpec)
+- Gestione CRUD delle categorie (app separata `gestione-categorie`, sviluppata in parallelo)
 - Upload immagini prodotto (sara evoluzione futura)
 - Export/import CSV o integrazione con sistemi esterni
 - Test automatizzati (unit test, e2e) — fuori scope per questa iterazione
@@ -76,8 +76,29 @@ admin         x      x      x      x
 
 **Motivazione:** naming italiano coerente con il dominio. Pattern Bishop standard con separazione app/api.
 
+### D6: categoriaId come riferimento (non enum)
+
+**Decisione:** il campo `categoriaId` e un UUID che referenzia l'entita Categoria gestita dall'app `gestione-categorie`. Non viene usato un enum hardcoded.
+
+**Motivazione:** le due app si sviluppano assieme. Partire subito con il riferimento evita una migrazione futura (enum → UUID). Il frontend mostra un TreeSelect picker alimentato da `GET /categorie/api/categorie`.
+
+**Alternative considerate:**
+- Enum fisso con migrazione successiva → debito tecnico certo, doppio lavoro su frontend (Select → TreeSelect) e backend (stringa → UUID)
+- Enum + categoriaId ibrido → complessita senza beneficio
+
+### D7: Trust su categoriaId (nessuna validazione backend)
+
+**Decisione:** il backend articoli NON valida che il categoriaId esista nella collection categorie. Si affida al frontend che presenta solo ID validi tramite il picker.
+
+**Motivazione:** la regola "blocca cancellazione categoria se ha articoli sotto" (implementata nell'app categorie) previene la creazione di orfani. Gli unici orfani possibili sarebbero da chiamate API manuali con ID inventati — rischio accettabile. Validare richiederebbe una chiamata cross-app dal backend articoli al backend categorie, aggiungendo accoppiamento e latenza.
+
+**Alternative considerate:**
+- Validazione sincrona cross-app → accoppiamento backend-to-backend, single point of failure, latenza aggiuntiva su ogni POST/PUT
+
 ## Risks / Trade-offs
 
 - **[FerretDB maturity]** FerretDB e meno maturo di MongoDB nativo → Mitigazione: usiamo solo operazioni CRUD semplici (find, insertOne, updateOne, deleteOne), nessuna aggregation pipeline
 - **[Nessun test automatizzato]** L'assenza di unit/e2e test rende il refactoring piu rischioso → Mitigazione: accettabile per un progetto didattico, i test manuali via file `.http` coprono il backend
 - **[Hard delete vs soft delete]** Si e scelto hard delete (DELETE fisico) invece di soft delete → Mitigazione: per un'anagrafica semplice il soft delete aggiunge complessita non necessaria. Puo essere aggiunto in un'evoluzione futura
+- **[Accoppiamento runtime con app Categorie]** Il frontend articoli dipende dall'API categorie per il picker → Mitigazione: se l'API categorie non e raggiungibile, il picker non funziona ma il resto dell'app rimane operativo. Per il contesto didattico il rischio e accettabile
+- **[Trust su categoriaId]** Nessuna validazione backend dell'esistenza della categoria → Mitigazione: la regola "blocca cancellazione categoria con articoli sotto" previene orfani. Solo chiamate API manuali con ID inventati potrebbero creare inconsistenze

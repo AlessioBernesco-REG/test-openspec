@@ -68,14 +68,25 @@ Confronto approcci:
 | Con | Query subtree ricorsive (lente) | Riscrittura path su spostamento | Insert/move costosi, complesso |
 | FerretDB | Non praticabile da solo | Buon fit con prefix match | Troppo complesso |
 
-## Nodi aperti
+## Decisioni aggiuntive (dalla sessione di explore)
 
-- **Cancellazione categoria con articoli sotto**: bloccare? spostare? lasciare orfani?
-- **UI**: TreeTable da bishop-app-hierarchy come riferimento?
-- **Relazione inter-app**: articoli deve chiamare endpoint categorie per il picker
+| Domanda | Risposta |
+|---|---|
+| Sviluppo sequenziale o parallelo? | Assieme: Categorie backend first, poi Articoli completa + Categorie UI |
+| Modello dati articoli: enum o riferimento? | Strada B: `categoriaId` (UUID ref) dal giorno 1, nessun enum, zero migrazione |
+| Cancellazione categoria con articoli sotto? | Blocca (A) + Soft delete (C): non puoi cancellare se ha articoli o figli; usa flag `attivo` per nascondere |
+| Cancellazione nodo intermedio con figli? | Blocca: devi prima spostare o cancellare i figli |
+| Validazione categoriaId lato backend articoli? | Trust: il frontend manda sempre ID validi dal picker; la regola "blocca cancellazione se ha articoli" previene orfani |
+| Accoppiamento runtime inter-app? | Accettabile: Articoli chiama GET /categorie/api/ per il picker |
+
+## Nodi chiusi
+
+- ~~Cancellazione categoria con articoli sotto~~: **blocca + soft delete**
+- ~~Relazione inter-app~~: **chiamata diretta API, accoppiamento accettabile**
+- ~~Validazione categoriaId~~: **trust, nessuna verifica backend**
 
 ## Prossimi passi
 
-- Creare una nuova change proposal `gestione-categorie`
-- Definire entita, API, ruoli, UI
-- Chiarire la dipendenza con app articoli (modifica del campo `categoria` da enum a riferimento)
+- [x] Aggiornare artifact change `anagrafica-articoli` (proposal, design, spec, tasks)
+- [ ] Creare nuova change proposal `gestione-categorie`
+- [ ] Definire entita Categoria, API albero, ruoli, UI TreeTable

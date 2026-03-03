@@ -4,12 +4,13 @@ Il progetto necessita di una Bishop App per la gestione dell'anagrafica articoli
 
 ## What Changes
 
-- Nuova entita **Articolo** con campi: codice univoco, descrizione, categoria, unita di misura, prezzo unitario, stato attivo/inattivo, note
-- Frontend React SPA con AnalyticalTable per lista articoli, filtri per categoria e stato, ricerca testuale, dialog CRUD
+- Nuova entita **Articolo** con campi: codice univoco, descrizione, **categoriaId** (riferimento a entita Categoria dell'app `gestione-categorie`), unita di misura, prezzo unitario, stato attivo/inattivo, note
+- Frontend React SPA con AnalyticalTable per lista articoli, filtri per categoria e stato, ricerca testuale, dialog CRUD con **TreeSelect picker** per selezione categoria (dati da API categorie)
 - Backend Node-RED con FerretDB per persistenza documenti JSON, endpoint REST CRUD completo
 - Autenticazione Keycloak con client `articoli-spa` e tre ruoli (viewer, user, admin)
 - Gateway APISIX con route frontend (no auth) e route API (JWT validation)
 - Validazione: codice articolo univoco, prezzo >= 0, unita di misura da lista valori predefiniti
+- **Dipendenza runtime** da app `gestione-categorie` per il picker categorie e la risoluzione dei nomi categoria
 
 ## Capabilities
 
@@ -23,4 +24,5 @@ Il progetto necessita di una Bishop App per la gestione dell'anagrafica articoli
 - **Infrastruttura**: nuovo client Keycloak `articoli-spa`, nuove route APISIX per `/articoli/app/*` e `/articoli/api/*`
 - **Node-RED**: nuovi flow CRUD sulla collection `articoli` in FerretDB (istanza bishop-nodered-customer)
 - **Frontend**: nuova SPA React accessibile su `/articoli/app/`
-- **Evoluzione futura**: l'anagrafica articoli sara la base per un catalogo prodotti con categorie gerarchiche e immagini
+- **Dipendenza**: richiede che il backend dell'app `gestione-categorie` sia disponibile per il funzionamento del picker categorie nel frontend
+- **Evoluzione futura**: l'anagrafica articoli sara la base per un catalogo prodotti con immagini
