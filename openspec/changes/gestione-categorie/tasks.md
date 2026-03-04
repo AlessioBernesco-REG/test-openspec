@@ -24,6 +24,8 @@
 - [ ] 2.13 Ordinare risultati GET per path e ordine
 - [ ] 2.14 Rimuovere filtro owner privacy (dati condivisi, no createdBy filter)
 - [ ] 2.15 Configurare REQUIRED_ROLES nel JWT Auth Subflow (GET: viewer,admin; POST/PUT/DELETE: admin)
+- [ ] 2.16 Implementare auto-move articoli su POST: se il padre ha articoli (query cross-collection su `articoli` con categoriaId = parentId), dopo la creazione della nuova categoria eseguire UPDATE su `articoli` SET categoriaId = nuovoId WHERE categoriaId = parentId. Restituire `movedArticlesCount` nella risposta 201
+- [ ] 2.17 Arricchire GET lista con `articlesCount` per ogni categoria: dopo il find, per ogni categoria contare articoli con categoriaId corrispondente (query batch sulla collection `articoli`)
 
 ## 3. Frontend Setup
 
@@ -54,6 +56,7 @@
 - [ ] 5.6 Creare src/components/common/AuthorizationErrorDialog.tsx (dialog bloccante per errori 401/403)
 - [ ] 5.7 Creare src/App.tsx (Keycloak init, QueryClient, ThemeProvider, AppShell + pagina + dialogs + toast + auth error dialog)
 - [ ] 5.8 Creare src/main.tsx (entry point con BrowserRouter basename=/categorie/app/)
+- [ ] 5.9 Creare dialog conferma auto-move in CategoriePage.tsx: quando l'admin crea un figlio sotto una categoria con articlesCount > 0, mostrare MessageBox di conferma con conteggio articoli prima di aprire il CategoriaDialog
 
 ## 6. Test API e Documentazione
 

@@ -92,9 +92,38 @@ admin         x      x      x      x
 
 **Motivazione:** il materialized path deve restare coerente. Lo spostamento e un'operazione rara (admin-only), quindi il costo della riscrittura e accettabile. La query per trovare i discendenti usa il prefix match sul vecchio path.
 
+### D8: Vincolo solo foglie per articoli
+
+**Decisione:** gli articoli possono referenziare solo categorie foglia (senza figli). Il vincolo e enforced sia dal picker nell'app articoli (solo foglie selezionabili) sia dal backend categorie (auto-move su creazione figlio).
+
+**Motivazione:** garantisce classificazione precisa — ogni articolo appartiene alla categoria piu specifica disponibile. Senza questo vincolo, articoli potrebbero restare su nodi generici anche quando esistono sotto-categorie piu appropriate.
+
+**Alternative considerate:**
+- Articoli ovunque nell'albero → semplice ma perde la garanzia di classificazione precisa
+- Articoli ovunque + warning → flessibile ma dati temporaneamente inconsistenti
+
+### D9: Auto-move articoli su creazione figlio
+
+**Decisione:** quando POST /categorie crea un figlio sotto un nodo che ha articoli assegnati, il backend sposta automaticamente tutti gli articoli dal padre al nuovo figlio (UPDATE cross-collection su `articoli` SET categoriaId = nuovoId WHERE categoriaId = padreId). La risposta 201 include `movedArticlesCount`.
+
+**Motivazione:** mantiene il vincolo "solo foglie" senza bloccare l'evoluzione dell'albero. L'alternativa "blocca creazione figlio se il padre ha articoli" era troppo rigida: costringeva l'admin a riassegnare manualmente tutti gli articoli prima di poter ristrutturare l'albero.
+
+**Trade-off:** il flow POST ora esegue una write cross-collection (prima solo il DELETE faceva una read cross-collection). L'operazione e rara (solo quando un nodo con articoli diventa padre) e il volume di update e contenuto.
+
+**Alternative considerate:**
+- Blocca creazione figlio → UX rigida, costringe a riassegnare manualmente prima
+- Forza riassegnazione interattiva → UX complessa, dialog articolato, scope della change esplode
+
+### D10: Dialog conferma auto-move
+
+**Decisione:** il frontend mostra un dialog di conferma prima di creare un figlio sotto una categoria con articoli. Il dialog indica il numero di articoli che verranno spostati: "La categoria 'X' ha N articoli assegnati. Creando una sotto-categoria, gli articoli verranno automaticamente spostati nella nuova categoria. Continuare?"
+
+**Motivazione:** l'auto-move e un side-effect non ovvio della creazione di un figlio. L'admin deve essere consapevole che gli articoli cambieranno categoria. Il conteggio viene dal campo `articlesCount` gia presente nella risposta GET.
+
 ## Risks / Trade-offs
 
 - **[FerretDB maturity]** FerretDB e meno maturo di MongoDB nativo → Mitigazione: solo operazioni CRUD semplici, regex per prefix match su path
 - **[Riscrittura path su move]** Spostare un nodo con molti discendenti richiede update multipli → Mitigazione: operazione rara, volume dati contenuto, batch update in singola transazione
 - **[Check cross-collection]** Il flow DELETE accede direttamente alla collection `articoli` → Mitigazione: solo una query find di conteggio, read-only, nessun rischio di corruzione dati
 - **[Nessun test automatizzato]** → Mitigazione: accettabile per progetto didattico, test manuali via `.http`
+- **[Write cross-collection su POST]** Il flow POST accede in scrittura alla collection `articoli` per l'auto-move → Mitigazione: operazione rara (solo quando si aggiunge un figlio a un nodo con articoli), update batch in singola operazione
