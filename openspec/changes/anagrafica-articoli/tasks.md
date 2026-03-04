@@ -43,7 +43,7 @@
 
 - [ ] 5.1 Creare src/components/layout/AppShell.tsx (ShellBar con title, Avatar, profile popover, logout)
 - [ ] 5.2 Creare src/components/pages/ArticoliPage.tsx (AnalyticalTable, toolbar con SearchField + filtro categoria Select (alimentato da API categorie) + filtro stato SegmentedButton, pulsante "Nuovo Articolo", Pagination, badge stato, colonna Categoria con nome risolto da categoriaId)
-- [ ] 5.3 Creare src/components/dialogs/ArticoloDialog.tsx (dialog create/edit con form: Codice Input, Descrizione Input, Categoria TreeSelect picker (da API categorie, selezione solo foglie), U.M. Select, Prezzo Input number, Attivo Switch, Note TextArea, footer Bar)
+- [ ] 5.3 Creare src/components/dialogs/ArticoloDialog.tsx (dialog create/edit con form: Codice Input, Descrizione Input, Categoria TreeSelect picker (da API categorie, albero completo visibile, solo foglie selezionabili — categorie intermedie disabilitate/grigie; isLeaf calcolato lato frontend dal tree), U.M. Select, Prezzo Input number, Attivo Switch, Note TextArea, footer Bar)
 - [ ] 5.4 Creare src/components/dialogs/DeleteArticoloDialog.tsx (dialog conferma eliminazione con MessageBox, mai window.confirm)
 - [ ] 5.5 Creare src/components/common/Toast.tsx (toast notification)
 - [ ] 5.6 Creare src/components/common/AuthorizationErrorDialog.tsx (dialog bloccante per errori 401/403)

@@ -85,8 +85,66 @@ Confronto approcci:
 - ~~Relazione inter-app~~: **chiamata diretta API, accoppiamento accettabile**
 - ~~Validazione categoriaId~~: **trust, nessuna verifica backend**
 
+---
+
+## Sessione 2026-03-04: Vincolo foglie e auto-move
+
+### Problema emerso
+
+Se una categoria foglia ha articoli e l'admin crea figli sotto di essa, quegli articoli non sono piu su una foglia. Il vincolo "articoli solo su foglie" viene violato silenziosamente.
+
+```
+PRIMA                              DOPO
+Resistenze [Art-001, Art-002]      Resistenze        <- non piu foglia!
+  (foglia)                         +-- SMD            <- nuova foglia
+                                   +-- Through-Hole   <- nuova foglia
+                                   Art-001, Art-002 dove vanno?
+```
+
+### Opzioni valutate
+
+| Approccio | Come funziona | Pro | Contro |
+|---|---|---|---|
+| Blocca | Non puoi creare figli sotto una categoria con articoli | Semplice | UX rigida |
+| Forza riassegnazione | Obbliga a riassegnare gli articoli ai nuovi figli | Coerente | UX complessa |
+| Rilassa il vincolo | Articoli ovunque nell'albero | Semplice | Perde precisione classificazione |
+| Tollera + segnala | Ovunque ma con warning | Flessibile | Dati temporaneamente inconsistenti |
+| **Auto-move** | Articoli si spostano al primo figlio creato | Mantiene vincolo automaticamente | Write cross-collection su POST |
+
+### Decisioni emerse (sessione 2)
+
+| # | Domanda | Risposta |
+|---|---|---|
+| D8 | Articoli su nodi intermedi? | **No** — solo foglie, vincolo enforced |
+| D9 | Cosa succede quando foglia diventa padre? | **Auto-move**: articoli si spostano automaticamente al primo figlio creato |
+| D10 | Il frontend avvisa prima dell'auto-move? | **Si**, dialog di conferma con conteggio articoli |
+| D11 | Picker categorie nell'app articoli | Albero completo, **solo foglie selezionabili** (intermedie disabilitate) |
+
+### Flusso auto-move in dettaglio
+
+```
+1. POST /categorie { nome: "SMD", parentId: "resistenze-id" }
+2. Backend: padre "Resistenze" ha articoli? -> query articoli WHERE categoriaId = parentId
+3. Trova Art-001, Art-002 -> crea categoria "SMD"
+4. UPDATE articoli SET categoriaId = "smd-id" WHERE categoriaId = "resistenze-id"
+5. Risponde 201 con movedArticlesCount: 2
+
+Risultato:
+   Resistenze
+   +-- SMD [Art-001, Art-002]   <- eredita articoli dal padre
+```
+
+### Nodi chiusi (sessione 2)
+
+- ~~Articoli su nodi intermedi~~: **no, solo foglie**
+- ~~Foglia diventa padre con articoli~~: **auto-move al primo figlio**
+- ~~Conferma auto-move~~: **si, dialog con conteggio**
+- ~~Picker articoli~~: **albero completo, solo foglie selezionabili**
+
 ## Prossimi passi
 
 - [x] Aggiornare artifact change `anagrafica-articoli` (proposal, design, spec, tasks)
-- [ ] Creare nuova change proposal `gestione-categorie`
-- [ ] Definire entita Categoria, API albero, ruoli, UI TreeTable
+- [x] Creare nuova change proposal `gestione-categorie`
+- [x] Definire entita Categoria, API albero, ruoli, UI TreeTable
+- [ ] Aggiornare artifact `gestione-categorie` con decisioni D8-D10 (design, spec, tasks)
+- [ ] Aggiornare artifact `anagrafica-articoli` con decisione D11 picker (design, spec, tasks)

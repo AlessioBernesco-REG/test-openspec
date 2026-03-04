@@ -95,6 +95,16 @@ admin         x      x      x      x
 **Alternative considerate:**
 - Validazione sincrona cross-app → accoppiamento backend-to-backend, single point of failure, latenza aggiuntiva su ogni POST/PUT
 
+### D8: Picker categorie — albero completo, solo foglie selezionabili
+
+**Decisione:** il TreeSelect picker mostra l'intero albero delle categorie per dare contesto gerarchico, ma solo le foglie (categorie senza figli) sono selezionabili. Le categorie intermedie sono visibili ma disabilitate (grigie, non cliccabili).
+
+**Motivazione:** coerente con il vincolo "articoli solo su foglie" stabilito nella change `gestione-categorie` (D8). Mostrare l'albero completo aiuta l'utente a navigare la gerarchia e capire dove si colloca la foglia scelta. La distinzione foglia/non-foglia si calcola lato frontend dal tree (una categoria e foglia se nessun'altra categoria ha il suo id come parentId).
+
+**Alternative considerate:**
+- Mostrare solo foglie → perde il contesto gerarchico, l'utente vede una lista piatta di nomi senza capire la struttura
+- Mostrare tutto e permettere selezione ovunque → viola il vincolo "solo foglie"
+
 ## Risks / Trade-offs
 
 - **[FerretDB maturity]** FerretDB e meno maturo di MongoDB nativo → Mitigazione: usiamo solo operazioni CRUD semplici (find, insertOne, updateOne, deleteOne), nessuna aggregation pipeline

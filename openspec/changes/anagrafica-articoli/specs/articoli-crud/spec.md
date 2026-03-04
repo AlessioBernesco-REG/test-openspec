@@ -36,6 +36,11 @@ Il sistema DEVE validare i campi dell'articolo prima della persistenza.
 
 _Nota: il backend NON valida l'esistenza del categoriaId nella collection categorie (approccio trust). Il frontend garantisce ID validi tramite il TreeSelect picker. La regola "blocca cancellazione categoria con articoli sotto" nell'app categorie previene orfani._
 
+#### Scenario: categoriaId punta a categoria non-foglia
+- **WHEN** l'utente tenta di assegnare un articolo a una categoria intermedia (con figli)
+- **THEN** il picker non lo permette (la categoria e disabilitata)
+- _Nota: il backend NON valida che la categoria sia foglia (approccio trust). Il vincolo e enforced solo lato frontend dal picker._
+
 ### Requirement: API REST CRUD articoli
 Il sistema DEVE esporre endpoint REST per la gestione CRUD degli articoli, accessibili tramite APISIX gateway con autenticazione JWT.
 
@@ -105,9 +110,12 @@ Il sistema DEVE limitare le operazioni in base al ruolo Keycloak dell'utente. I 
 ### Requirement: Integrazione con API Categorie
 Il frontend DEVE consumare l'API dell'app `gestione-categorie` per ottenere l'albero delle categorie. Il backend articoli NON valida l'esistenza del categoriaId (approccio trust).
 
-#### Scenario: Caricamento albero categorie per picker
+#### Scenario: Picker mostra albero completo con solo foglie selezionabili
 - **WHEN** l'utente apre il dialog di creazione o modifica articolo
-- **THEN** il frontend richiede `GET /categorie/api/categorie` e popola il TreeSelect picker con l'albero delle categorie attive
+- **THEN** il frontend richiede `GET /categorie/api/categorie` e popola il TreeSelect picker con l'intero albero delle categorie attive
+- **AND** solo le categorie foglia (senza figli) sono selezionabili
+- **AND** le categorie intermedie (con figli) sono visibili ma disabilitate (grigie, non cliccabili)
+- _Nota: la distinzione foglia/non-foglia si calcola lato frontend dal tree (una categoria e foglia se nessun'altra categoria ha il suo id come parentId)_
 
 #### Scenario: Risoluzione nome categoria in tabella
 - **WHEN** la tabella articoli viene renderizzata
