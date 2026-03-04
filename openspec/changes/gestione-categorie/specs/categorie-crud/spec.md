@@ -57,6 +57,16 @@ Il sistema DEVE esporre endpoint REST per la gestione CRUD delle categorie, acce
 - **WHEN** il client invia `POST /categorie` con body valido
 - **THEN** il sistema valida, calcola path e livello dal padre, persiste su FerretDB, e risponde 201 Created
 
+#### Scenario: Creazione categoria sotto nodo con articoli (auto-move)
+- **WHEN** il client invia `POST /categorie` con parentId di una categoria che ha articoli assegnati
+- **THEN** il sistema crea la nuova categoria E sposta automaticamente tutti gli articoli dal padre alla nuova categoria (UPDATE articoli SET categoriaId = nuovo-id WHERE categoriaId = padre-id)
+- **AND** risponde 201 Created con campo aggiuntivo `movedArticlesCount: N`
+
+#### Scenario: Conteggio articoli per categoria
+- **WHEN** il client richiede `GET /categorie`
+- **THEN** ogni categoria nella risposta include il campo `articlesCount` (numero di articoli con quel categoriaId)
+- _Nota: serve al frontend per il dialog di conferma auto-move e per la colonna "Articoli" nella TreeTable_
+
 #### Scenario: Aggiornamento categoria (rename)
 - **WHEN** il client invia `PUT /categorie/:id` con nome modificato
 - **THEN** il sistema aggiorna nome, riscrive il path del nodo e di tutti i discendenti, e risponde 200
@@ -134,6 +144,12 @@ Il frontend DEVE usare dialog modali UI5 per creazione e modifica categorie.
 #### Scenario: Apertura dialog modifica
 - **WHEN** l'admin clicca "Modifica" su una categoria
 - **THEN** si apre un dialog con i campi precompilati. Il campo Padre permette di spostare la categoria (con validazione anti-circolarita)
+
+#### Scenario: Conferma creazione sotto-categoria con auto-move
+- **WHEN** l'admin clicca "Aggiungi figlia" su una categoria che ha articoli (articlesCount > 0)
+- **THEN** il sistema mostra un dialog di conferma: "La categoria 'X' ha N articoli assegnati. Creando una sotto-categoria, gli articoli verranno automaticamente spostati nella nuova categoria. Continuare?"
+- **WHEN** l'admin conferma
+- **THEN** si apre il dialog di creazione con parentId precompilato
 
 #### Scenario: Conferma eliminazione
 - **WHEN** l'admin clicca "Elimina" su una categoria
